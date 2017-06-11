@@ -1,0 +1,2 @@
+#!/bin/bash
+node index.js `TZ=JST-9 date +"%Y %-m"` && node index.js `TZ=JST-9 date -d '-1 month' +"%Y %-m"`

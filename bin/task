@@ -1,2 +1,4 @@
 #!/bin/bash
-node index.js `TZ=JST-9 date +"%Y %-m"` && node index.js `TZ=JST-9 date -d '-1 month' +"%Y %-m"`
+thismonth="TZ=JST-9 date +'%Y %-m'"
+lastmonth="TZ=JST-9 date +'%Y %-m' -d '1 days ago `date +%Y%m01`'"
+node index.js `eval $thismonth` && node index.js `eval $lastmonth`

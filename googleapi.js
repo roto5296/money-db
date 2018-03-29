@@ -5,7 +5,7 @@ const googleAuth = require('google-auth-library');
 const util = require('util');
 const request = require('request-promise');
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive', 'https://mail.google.com/']
 
 class googleapi {
   constructor (scriptId) {

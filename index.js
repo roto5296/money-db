@@ -40,6 +40,7 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
         pass[type][name].options = {};
       }
       pass[type][name].options.cookie_auth = g_api.auth;
+      pass[type][name].options.gmail_auth = g_api.auth;
       const client = new money[type][name](pass[type][name]);
       try{
         await client.waitInit();

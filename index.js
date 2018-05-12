@@ -78,11 +78,14 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
       const new_data = new_data_list[i];
       const old_data = old_data_list[i];
       //find deleted data
+      const compareFunc = (a, b)=>{
+        return a.date === b.date
+          && a.price === b.price
+          && a.detail === b.detail;
+      };
       old_data.forEach((data)=>{
         let index = new_data.findIndex((element)=>{
-          return  element.date === data.date
-            && element.price === data.price
-            && element.detail === data.detail
+          return compareFunc(element, data)
         });
         if (index === -1) {
           deletedData.push(data);
@@ -93,6 +96,7 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
       });
       let allData = new_data.concat(deletedData);
       //sort  all data
+      let allData_copy = JSON.parse(JSON.stringify(allData));
       allData.sort((a,b)=>{
         let a_d = a.date.split('/');
         let b_d = b.date.split('/');
@@ -103,7 +107,11 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
             return 1;
           }
         }
-        return 0;
+        return allData_copy.findIndex((element)=>{
+          return compareFunc(element, a);
+        }) - allData_copy.findIndex((element)=>{
+          return compareFunc(element, b);
+        });
       });
       allData.forEach((data, sort)=>{
         if (data.uuid === undefined) {

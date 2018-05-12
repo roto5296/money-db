@@ -99,15 +99,15 @@ class googleapi {
     return ret;
   }
 
-  async update (name, old_data, new_data) {
+  async update (name, data) {
     var resource = {
       function: 'updateRows',
       parameters: [
         name,
-        old_data.map(function(data){
-          return data.uuid;
+        data.map(function(d){
+          return d.uuid;
         }),
-        new_data
+        data
       ]
     };
     var ret = await this.script(resource);

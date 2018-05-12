@@ -68,45 +68,58 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
       console.log('success');
       return old_data;
     }));
-    console.log('\n~merge process~')
+    console.log('\n~merge process~');
     for (let i = 0; i < TNList.length; i++) {
       let insertData = [];
-      let updateData_old = [];
-      let updateData_new = [];
+      let deletedData = [];
+      let updateData = [];
       const type = TNList[i][0];
       const name = TNList[i][1];
-      new_data_list[i].forEach((data)=>{
-        let neq_flag = true;
-        for (let j = 0; j < old_data_list[i].length; j++) {
-          let old_data = old_data_list[i][j];
-          //find same data
-          if (data.date === old_data.date
-              && data.price === old_data.price
-              && data.detail === old_data.detail) {
-            neq_flag = false;
-            old_data_list[i].splice(j, 1);
-            break;
+      const new_data = new_data_list[i];
+      const old_data = old_data_list[i];
+      //find deleted data
+      old_data.forEach((data)=>{
+        let index = new_data.findIndex((element)=>{
+          return  element.date === data.date
+            && element.price === data.price
+            && element.detail === data.detail
+        });
+        if (index === -1) {
+          deletedData.push(data);
+        } else {
+          //set uuid
+          new_data[index].uuid = data.uuid;
+        }
+      });
+      let allData = new_data.concat(deletedData);
+      //sort  all data
+      allData.sort((a,b)=>{
+        let a_d = a.date.split('/');
+        let b_d = b.date.split('/');
+        for (let j = 0; j < 3; j++) {
+          if (a_d[j] < b_d[j]) {
+            return -1;
+          } else if (a_d[j] > b_d[j]) {
+            return 1;
           }
         }
-        if (neq_flag) {
-          let insert_flag = true;
-          for (let j = 0; j < old_data_list[i].length; j++) {
-            let old_data = old_data_list[i][j];
-            //find update data
-            if (data.date === old_data.date
-                && data.price === old_data.price
-                && data.detail !== old_data.detail) {
-              insert_flag = false;
-              updateData_old.push(old_data);
-              updateData_new.push(data);
-              old_data_list[i].splice(j, 1);
-              break;
-            }
-          }
-          if (insert_flag) {
-            insertData.push(data);
+        return 0;
+      });
+      allData.forEach((data, sort)=>{
+        if (data.uuid === undefined) {
+          //new data
+          insertData.push(data);
+        } else {
+          let index = old_data.findIndex((element)=>{
+            return element.uuid ===  data.uuid;
+          });
+          if (old_data[index].sort !== sort) {
+            //change sort
+            updateData.push(data);
           }
         }
+        //update sort
+        data.sort = sort;
       });
       console.log(TNList[i]);
       if (insertData.length) {
@@ -115,15 +128,15 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
       } else {
         console.log("No New Data");
       }
-      if (updateData_old.length) {
-        const ret = await api.update(type+'-'+name, updateData_old, updateData_new);
-        console.log("Update " + updateData_old.length + " Data");
+      if (updateData.length) {
+        const ret = await api.update(type+'-'+name, updateData);
+        console.log("Update " + updateData.length + " Data (Sort)");
       } else {
-        console.log("No Update Data");
+        console.log("No Update Data (Sort)");
       }
-      if (old_data_list[i].length !== 0) {
+      if (deletedData.length) {
         console.log("These Data are not found in web data");
-        old_data_list[i].forEach((data)=>{
+        deletedData.forEach((data)=>{
           console.log(data);
         });
       }

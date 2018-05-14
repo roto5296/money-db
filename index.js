@@ -77,24 +77,47 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
       const name = TNList[i][1];
       const new_data = new_data_list[i];
       const old_data = old_data_list[i];
-      //find deleted data
-      const compareFunc = (a, b)=>{
+      //find deleted data and update data
+      const compareFunc1 = (a, b)=>{
         return a.date === b.date
           && a.price === b.price
           && a.detail === b.detail;
       };
+      const compareFunc2 = (a, b)=>{
+        return a.date === b.date
+          && a.price === b.price;
+      };
+      let duData = [];
+      let new_data_copy = new_data.map((data)=>{return data;});
       old_data.forEach((data)=>{
-        let index = new_data.findIndex((element)=>{
-          return compareFunc(element, data)
+        let index = new_data_copy.findIndex((element)=>{
+          return compareFunc1(element, data)
         });
         if (index === -1) {
-          deletedData.push(data);
+          //update or deleted data
+          duData.push(data);
         } else {
+          //same data
           //set uuid
-          new_data[index].uuid = data.uuid;
+          new_data_copy[index].uuid = data.uuid;
+          new_data_copy.splice(index, 1);
         }
       });
-      let allData = new_data.concat(deletedData);
+      duData.forEach((data)=>{
+        let index = new_data_copy.findIndex((element)=>{
+          return compareFunc2(element, data);
+        });
+        if (index === -1) {
+          //deleted data
+          deletedData.push(data);
+        } else {
+          //update data
+          //set uuid
+          new_data_copy[index].uuid = data.uuid;
+          new_data_copy.splice(index, 1);
+        }
+      });
+      let allData = new_data.concat(JSON.parse(JSON.stringify(deletedData)));
       //sort  all data
       let allData_copy = JSON.parse(JSON.stringify(allData));
       allData.sort((a,b)=>{
@@ -108,12 +131,14 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
           }
         }
         return allData_copy.findIndex((element)=>{
-          return compareFunc(element, a);
+          return compareFunc1(element, a);
         }) - allData_copy.findIndex((element)=>{
-          return compareFunc(element, b);
+          return compareFunc1(element, b);
         });
       });
       allData.forEach((data, sort)=>{
+        //update sort
+        data.sort = sort;
         if (data.uuid === undefined) {
           //new data
           insertData.push(data);
@@ -121,13 +146,12 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
           let index = old_data.findIndex((element)=>{
             return element.uuid ===  data.uuid;
           });
-          if (old_data[index].sort !== sort) {
+          if (old_data[index].detail != data.detail
+              || old_data[index].sort !== data.sort) {
             //change sort
             updateData.push(data);
           }
         }
-        //update sort
-        data.sort = sort;
       });
       console.log(TNList[i]);
       if (insertData.length) {
@@ -138,9 +162,9 @@ var pass = JSON.parse(process.env.PASS_JSON || fs.readFileSync('password.json'))
       }
       if (updateData.length) {
         const ret = await api.update(type+'-'+name, updateData);
-        console.log("Update " + updateData.length + " Data (Sort)");
+        console.log("Update " + updateData.length + " Data");
       } else {
-        console.log("No Update Data (Sort)");
+        console.log("No Update Data");
       }
       if (deletedData.length) {
         console.log("These Data are not found in web data");

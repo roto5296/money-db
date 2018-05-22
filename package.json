@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "google-auth-library": "^1.4.0",
+    "google-auth-library": "^1.5.0",
     "googleapis": "^26.0.1",
     "money-scraping": "github:roto5296/money-scraping",
     "promise-mysql": "^3.2.1",
